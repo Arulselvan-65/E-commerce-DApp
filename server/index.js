@@ -1,12 +1,23 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const PaymentProcessor = require('../build/contracts/PaymentProcessor.json');
+//const PaymentProcessor = require('../build/contracts/PaymentProcessor.json');
 const { Payment,Item } = require('./db.js');
 const { ethers } = require('ethers');
 
+const {v2} = require('cloudinary');
 
-const app = express();
+          
+// v2.config({ 
+//   cloud_name: 'dlh5ovjh2', 
+//   api_key: '883427448688616', 
+//   api_secret: '3i5vJp-RHpkBW1NtaRRC3mlapac' 
+// });
+
+// v2.uploader.upload("https://upload.wikimedia.org/wikipedia/commons/a/ae/Olympic_flag.jpg",
+//   { public_id: "olympic_flag" }, 
+//   function(error, result) {console.log(result); });
+// const app = express();
 
 app.use(express.json());
 app.use(cors())

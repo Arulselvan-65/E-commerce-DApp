@@ -1,8 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const autoIncrement = require('mongoose-auto-increment');
-
 const app = express();
 
 app.use(express.json());
