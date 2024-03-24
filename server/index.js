@@ -5,19 +5,7 @@ const cors = require('cors');
 const { Payment,Item } = require('./db.js');
 const { ethers } = require('ethers');
 
-const {v2} = require('cloudinary');
-
-          
-// v2.config({ 
-//   cloud_name: 'dlh5ovjh2', 
-//   api_key: '883427448688616', 
-//   api_secret: '3i5vJp-RHpkBW1NtaRRC3mlapac' 
-// });
-
-// v2.uploader.upload("https://upload.wikimedia.org/wikipedia/commons/a/ae/Olympic_flag.jpg",
-//   { public_id: "olympic_flag" }, 
-//   function(error, result) {console.log(result); });
-// const app = express();
+const app = express();
 
 app.use(express.json());
 app.use(cors())
@@ -72,7 +60,13 @@ app.post('/api/addItem', async(req,res) =>{
     res.send({
        id: ID
     });
+});
+
+app.get('/api/getItems', async(req,res)=>{
+    let item = await Item.find();
+    res.send(item);
 })
+
 
 
 app.listen(5000,()=>{

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { Web3 } from 'web3';
+import {RingLoader} from "react-spinners";
 import exit from '../assets/cross.png';
 import del from '../assets/delete.png';
 
@@ -11,6 +11,8 @@ const Navbar = () => {
     const [loggedUser, setLoggedUser] = useState('');
     const [showModel, setShowModel] = useState(false);
     const [file, setFile] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [prize, setPrize] = useState();
 
 
     useEffect(() => {
@@ -22,7 +24,14 @@ const Navbar = () => {
                 setIsLoggedin(false);
                 setLoggedUser(accounts[0]);
             })
+            localStorage.clear();
         })
+
+        if (localStorage.getItem('loggedUser') !== undefined) {
+            setMessage(localStorage.getItem('message'));
+            setLoggedUser(localStorage.getItem('loggedUser'));
+            setIsLoggedin(true);
+        }
     });
 
     const handleOpenModel = () => {
@@ -35,12 +44,40 @@ const Navbar = () => {
 
     const handleFileChange = (e) => {
         let file = e.target.files[0];
-        console.log(file);
         if (file) setFile(file);
     }
 
     const clearFile = () => {
         setFile(null);
+    }
+
+    let preset = 'xjli4qqq';
+
+    const uploadPost = async () => {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", preset);
+        setLoading(true);
+
+        await axios.post('https://api.cloudinary.com/v1_1/dlh5ovjh2/image/upload', formData)
+            .then(async (res) => {
+                let Item = {
+                    Owner: loggedUser,
+                    Prize: prize,
+                    Url: res.data.secure_url
+                }
+                await axios.post('http://localhost:5000/api/addItem', Item)
+                    .then((res) => {
+                        console.log(res);
+                        setShowModel(false);
+                        window.location.reload();
+                        setLoading(false);
+                    })
+            }
+            )
+            .catch((err) => {
+                console.log("Error : ", err);
+            });
     }
 
 
@@ -53,6 +90,7 @@ const Navbar = () => {
             await web3Instance.eth.getAccounts().then((accounts) => {
                 user = accounts[0];
                 setLoggedUser(accounts[0]);
+                localStorage.setItem("loggedUser", `${accounts[0]}`);
             })
 
             if (user) {
@@ -74,6 +112,7 @@ const Navbar = () => {
                         if (e) {
                             setMessage(e);
                             setIsLoggedin(true);
+                            localStorage.setItem("message", `${e}`);
                         }
                     });
                 }
@@ -97,7 +136,7 @@ const Navbar = () => {
                             {file ?
                                 <>
                                     <div className='absolute top-0 z-40 right-0'>
-                                        <img src={del} height="20px" width="30px" className='cursor-pointer bg-white rounded-xl' onClick={clearFile} />
+                                        <img src={del} height="20px" width="30px" className='cursor-pointer bg-white rounded-xl33' onClick={clearFile} />
                                     </div>
                                     <img src={file ? URL.createObjectURL(file) : ''} className='object-cover max-h-[400px]'></img>
                                 </>
@@ -107,10 +146,10 @@ const Navbar = () => {
                         </div>
                         <div className='flex flex-col mt-4 text-[20px] font-roboto'>
                             <label className='text-center'>Price</label>
-                            <input type='text' className='border border-gray-400 h-12 rounded focus:outline-none p-2 text-[18px]'>
+                            <input onChange={(e) => setPrize(e.target.value)} required type='number' placeholder='Eg. 100' className='border border-gray-400 h-12 rounded focus:outline-none p-2 text-[18px]'>
                             </input>
                         </div>
-                        <button className='mt-6 bg-blue-600 font-roboto cursor-pointer text-white text-[16px] h-12 p-2 w-full rounded'>
+                        <button onClick={uploadPost} className='mt-6 bg-blue-600 font-roboto cursor-pointer text-white text-[16px] h-12 p-2 w-full rounded'>
                             Create
                         </button>
                     </div>
@@ -119,8 +158,30 @@ const Navbar = () => {
                     </div>
                 </div>
             }
+
+            {loading && <div style={
+                {
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "rgba(0, 0, 0, 0.9)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    zIndex: 9999,
+                }
+            } >
+                <RingLoader
+                    color='blue'
+                    loading={loading}
+                    size={200}
+                />
+            </div>
+            }
             <div className="top-0 sticky flex justify-between items-center p-[20px] 
-                        pl-[50px] pr-[50px] shadow shadow-gray-600 h-20 w-full phone:px-[10px]">
+                        pl-[50px] pr-[50px] shadow shadow-gray-600 h-20 w-full phone:px-[10px] bg-white">
                 <div className='font-mogra text-blue-600 text-[40px] phone:text-[22px]'>
                     <h1 className='font-mogra'>HAMS PICS</h1>
                 </div>
@@ -129,7 +190,7 @@ const Navbar = () => {
                         onClick={handleOpenModel}>
                         Create
                     </button>
-                    {isLoggedin || message ?
+                    {(isLoggedin || message) && loggedUser ?
                         <div className='border border-gray-600 rounded h-12 w-40 flex justify-center items-center phone:h-8 w-30'>
                             <p className='text-[18px] font-roboto'>{loggedUser.substring(0, 10) + '....'}</p>
                         </div>
